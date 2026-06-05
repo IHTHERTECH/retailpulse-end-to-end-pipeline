@@ -33,7 +33,7 @@ models:
   dbt_retailpulse:
     staging:
       +materialized: view
-    # intermediate:
-    #   +materialized: view
+      +schema: retailpulse_staging
     marts:
       +materialized: table
+      +schema: retailpulse_gold  
