@@ -318,21 +318,36 @@ dbt docs serve
 
 ---
 
-### Step 7 — Set Up Airflow Orchestration
+### Step 7 — Set Up Pipeline Orchestration
 
-```bash
-# Start Airflow locally
-airflow standalone
+This project uses **Databricks Workflows** for orchestration, which is the
+native and recommended approach when running pipelines on Databricks.
 
-# Open http://localhost:8080 in your browser
-# Username: admin | Password: shown in terminal output
+The workflow `retailpulse_pipeline` is configured directly in the Databricks
+Workflows UI with three tasks running in sequence:
 
-# The DAG retailpulse_dag.py will appear automatically
-# Enable it and trigger a run
-```
+| Task | Type | What it does |
+| --- | --- | --- |
+| `ingest_bronze` | Notebook | Runs Auto Loader to read S3 CSV files → Bronze Delta tables |
+| `run_dbt_models` | dbt (GitHub) | Runs `dbt deps` + `dbt run` → builds Staging and Gold mart models |
+| `run_dbt_tests` | dbt (GitHub) | Runs `dbt test` → validates all 21 data quality tests |
 
-The DAG runs the full pipeline in order:
-`ingest_bronze` → `clean_silver` → `build_gold` → `run_dbt_models` → `run_dbt_tests`
+The `run_dbt_models` and `run_dbt_tests` tasks pull the dbt project directly
+from the GitHub repository (`dbt_retailpulse/` folder, `main` branch), so the
+workflow always runs the latest committed code.
+
+**To re-create the workflow in a new workspace:**
+1. Go to Databricks → **Jobs & Pipelines** → **Create job**
+2. Name it `retailpulse_pipeline`
+3. Add Task 1: Notebook → `retailpulse_01_bronze_ingestion`
+4. Add Task 2: dbt → Source: Git provider → `dbt_retailpulse` → commands: `dbt deps`, `dbt run`
+5. Add Task 3: dbt → Source: Git provider → `dbt_retailpulse` → commands: `dbt deps`, `dbt test`
+6. Set dependencies: Task 2 depends on Task 1, Task 3 depends on Task 2
+
+> **Airflow equivalent:** For non-Databricks environments (AWS MWAA, Google
+> Cloud Composer, self-hosted), an equivalent Airflow DAG is provided at
+> `airflow/dags/retailpulse_dag.py`. Note that Airflow does not run natively
+> on Windows — use WSL2 or Docker in that case.
 
 ---
 
