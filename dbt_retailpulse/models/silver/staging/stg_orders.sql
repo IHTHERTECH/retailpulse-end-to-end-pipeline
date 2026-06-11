@@ -1,5 +1,5 @@
 with source as (
-  select * from {{ source('retailpulse_silver', 'orders') }}
+  select * from {{ source('retailpulse_bronze', 'orders') }}
 )
 
 select

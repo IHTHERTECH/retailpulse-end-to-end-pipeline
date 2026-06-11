@@ -31,9 +31,9 @@ clean-targets:         # directories to be removed by `dbt clean`
 # files using the `{{ config(...) }}` macro.
 models:
   dbt_retailpulse:
-    staging:
+    silver:
       +materialized: view
-      +schema: retailpulse_staging
-    marts:
+      +schema: silver
+    gold:
       +materialized: table
-      +schema: retailpulse_gold  
+      +schema: gold  
