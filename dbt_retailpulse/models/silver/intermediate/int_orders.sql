@@ -4,12 +4,12 @@ with orders as (
 
 cleaned_data as (
     select
-        cast(order_id as integer) as order_id,
-        cast(customer_id as integer) as customer_id,
-        cast(product_id as integer) as product_id,
-        cast(quantity as integer) as quantity,
-        cast(amount as decimal(10,2)) as amount,
-        to_date(order_date, 'yyyy-MM-dd') as order_date
+        order_id,
+        customer_id,
+        product_id,
+        quantity,
+        amount,
+        order_date
         -- Omitting '_rescued_data' implicitly drops it
     from orders
 ),

@@ -4,13 +4,13 @@ with customers as (
 
 cleaned_data as (
     select
-        cast(customer_id as integer) as customer_id,
+        customer_id,
         -- Cast name to first and last name
         split_part(customer_name, ' ', 1) as first_name,
         split_part(customer_name, ' ', 2) as last_name,
         city,
         country,
-        to_date(signup_date, 'yyyy-MM-dd') as signup_date
+        signup_date
         -- Omitting '_rescued_data' implicitly drops it
     from customers
 ),

@@ -3,9 +3,9 @@ with source as (
 )
  
 select
-  customer_id,
+  cast(customer_id as integer) as customer_id,
   name as customer_name,
   city,
   country,
-  signup_date
+  to_date(signup_date, 'yyyy-MM-dd') as signup_date
 from source

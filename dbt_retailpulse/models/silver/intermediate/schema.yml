@@ -12,7 +12,7 @@ models:
           - not_null
           - dbt_utils.accepted_range:
               arguments:
-                min_value: 0
+                min_value: 0.0
                 inclusive: true
       - name: customer_id
         tests:
@@ -39,5 +39,5 @@ models:
           - not_null
           - dbt_utils.accepted_range:
               arguments:
-                min_value: 0
+                min_value: 0.0
                 inclusive: true

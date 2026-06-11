@@ -4,11 +4,11 @@ with products as (
 
 cleaned_data as (
     select
-        cast(product_id as integer) as product_id,
-        cast(price as decimal(10,2)) as price,
-        cast(stock_qty as integer) as stock_qty,
+        product_id,
         product_name,
-        category
+        category,
+        price,
+        stock_qty
         -- Omitting '_rescued_data' implicitly drops it
     from products
 ),
