@@ -10,6 +10,10 @@ models:
       - name: amount
         tests:
           - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0.0
+                inclusive: true
 
       - name: customer_id
         tests:
@@ -34,3 +38,9 @@ models:
       - name: price
         tests:
           - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0.0
+                inclusive: true
+
+

@@ -1,99 +1,84 @@
 # 🛒 RetailPulse — End-to-End Retail Analytics Pipeline
 
-> A beginner-friendly, production-realistic data engineering project built on the Databricks Lakehouse ecosystem.
+![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
+![Databricks](https://img.shields.io/badge/Databricks-Free%20Edition-red?logo=databricks)
+![Delta Lake](https://img.shields.io/badge/Delta%20Lake-Medallion%20Architecture-blue)
+![dbt](https://img.shields.io/badge/dbt-1.12.0-orange?logo=dbt)
+![Terraform](https://img.shields.io/badge/Terraform-IaC-purple?logo=terraform)
+![AWS S3](https://img.shields.io/badge/AWS-S3-yellow?logo=amazons3)
+![Power BI](https://img.shields.io/badge/Power%20BI-Dashboard-gold?logo=powerbi)
+
+> A complete, production-realistic data engineering portfolio project built on the Databricks Lakehouse ecosystem.
 
 ---
 
-## 📖 Project Overview
+## 📖 Overview
 
-**RetailPulse** is a complete, end-to-end data pipeline that ingests raw retail transaction data (orders, products, customers) from Amazon S3, processes and transforms it through a **Bronze → Silver → Gold** medallion architecture using **Delta Lake** on **Databricks**, transforms it with **dbt**, governs it via **Unity Catalog**, and finally visualizes it in **Power BI**.
+**RetailPulse** is a full end-to-end data pipeline that ingests raw retail transaction data (orders, customers, products) from **Amazon S3**, processes it through a **Bronze → Silver → Gold medallion architecture** using **Delta Lake** on **Databricks**, transforms it with **dbt**, governs it via **Unity Catalog**, orchestrates it with **Databricks Workflows**, and visualises business KPIs in **Power BI**.
 
-This project is designed for **first-time data engineers** who want hands-on experience with a modern, production-grade lakehouse stack — without the noise of unnecessary tools.
-
----
-
-## 🎯 What You Will Learn
-
-By completing this project, you will have hands-on experience with:
-
-* Ingesting raw files incrementally from S3 using **Databricks Auto Loader**
-* Building a **Medallion Architecture** (Bronze / Silver / Gold) with **Delta Lake**
-* Writing scalable data transformations with **Apache Spark** on **Databricks**
-* Modeling and testing data transformations with **dbt**
-* Governing data assets (lineage, access control, tagging) using **Unity Catalog**
-* Orchestrating pipeline runs with **Apache Airflow** (or **Databricks Workflows**)
-* Provisioning cloud infrastructure as code with **Terraform**
-* Automating deployment with **GitHub Actions**
-* Visualizing business KPIs in **Power BI**
+The project is built ticket-by-ticket on a Jira Kanban board, mirroring real team workflows.
 
 ---
 
-## 🗂️ Dataset
+## 📊 Dashboard
 
-We use a **synthetic retail dataset** that simulates a small e-commerce business. You can generate it locally using the provided script, or download the CSV files from the `/data/sample/` folder in this repo.
+![RetailPulse Sales Dashboard](dashboards/retailpulse_dashboard_screenshot.png)
 
-| File | Description | Rows (sample) |
-| --- | --- | --- |
-| `orders.csv` | Order transactions (order_id, customer\_id, product\_id, amount, date) | ~500K |
-| `customers.csv` | Customer profiles (customer\_id, name, city, country, signup\_date) | ~50K |
-| `products.csv` | Product catalog (product\_id, name, category, price, stock\_qty) | ~5K |
-
-Upload these files to your S3 bucket under the path: `s3://<your-bucket>/raw/retail/`
+Four Gold-layer visuals built in Power BI:
+- **Daily Revenue Trend** — line chart from `gold.daily_sales`
+- **Top 10 Customers by Revenue** — bar chart from `gold.top_customers`
+- **Revenue by Product Category** — donut chart from `gold.revenue_by_category`
+- **Orders by Country** — bubble map from `gold.orders_by_country`
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌────────────────────────────────────────────────────────────────────┐
-│                         DATA SOURCES                               │
-│              CSV Files (Orders, Customers, Products)               │
-└──────────────────────────────┬─────────────────────────────────────┘
-                            Upload
-                               │  
+┌─────────────────────────────────────────────────────────────┐
+│                        DATA SOURCES                         │
+│         Synthetic CSVs: orders, customers, products         │
+│                   (500K / 50K / 5K rows)                    │
+└──────────────────────────────┬──────────────────────────────┘
+                               │  scripts/generate_data.py
                                ▼
- ┌─────────────────────────────────────────────────────────────────┐
- │                          AMAZON S3                              │
- │                   s3://<bucket>/raw/retail/                     │
- └──────────────────────────────┬──────────────────────────────────┘
-                                │
-                Auto Loader (incremental ingestion)
-                                │
-                                ▼
- ┌─────────────────────────────────────────────────────────────────┐
- │                    DELTA LAKE — BRONZE                          │
- │         Raw, unmodified data. Append-only. Schema inferred.     │
- │   Tables: bronze.orders | bronze.customers | bronze.products    │
- └──────────────────────────────┬──────────────────────────────────┘
-                                │
-                       Spark Transformations
-                                │
-                                ▼
- ┌─────────────────────────────────────────────────────────────────┐
- │                    DELTA LAKE — SILVER                          │
- │    Cleaned, deduplicated, type-cast, joined data.               │
- │   Tables: silver.orders | silver.customers | silver.products    │
- └──────────────────────────────┬──────────────────────────────────┘
-                                │
-                            dbt Models
-                                │
-                                ▼
- ┌─────────────────────────────────────────────────────────────────┐
- │                    DELTA LAKE — GOLD                            │
- │    Business-level aggregates ready for reporting.               │
- │   Tables: gold.daily_sales | gold.top_customers | gold.revenue  │
- └──────────────────────────────┬──────────────────────────────────┘
-                                │
-                  ┌─────────────┴──────────────┐
-                  ▼                            ▼
-      ┌─────────────────────┐       ┌────────────────────────┐
-      │   UNITY CATALOG     │       │      POWER BI          │
-      │  Governance,        │       │  Sales Dashboard       │
-      │  Lineage, Access    │       │  Customer Analytics    │
-      └─────────────────────┘       └────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                         AMAZON S3                           │
+│             s3://retailpulse-raw-data-landing/              │
+│                  Provisioned via Terraform                  │
+└──────────────────────────────┬──────────────────────────────┘
+                               │  Auto Loader (cloudFiles)
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│              DELTA LAKE — BRONZE (Unity Catalog)            │
+│     Raw, append-only ingestion. Schema inferred.            │
+│  workspace.retailpulse_bronze.orders / customers / products │
+└──────────────────────────────┬──────────────────────────────┘
+                               │  PySpark (Silver notebook)
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│              DELTA LAKE — SILVER (Unity Catalog)            │
+│   Cleaned, deduped, type-cast, _rescued_data dropped.       │
+│  workspace.retailpulse_silver.orders / customers / products │
+└──────────────────────────────┬──────────────────────────────┘
+                               │  dbt-databricks 1.12.0
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│              DELTA LAKE — GOLD (Unity Catalog)              │
+│        Business aggregates ready for reporting.             │
+│   workspace.retailpulse_gold.daily_sales / top_customers /  │
+│              revenue_by_category / orders_by_country        │
+└────────────────┬────────────────────────────┬───────────────┘
+                 │                            │
+                 ▼                            ▼
+   ┌─────────────────────┐        ┌───────────────────────┐
+   │   UNITY CATALOG     │        │       POWER BI        │
+   │  Lineage, access    │        │   Sales Dashboard     │
+   │  control, PII tags  │        │   (CSV import mode)   │
+   └─────────────────────┘        └───────────────────────┘
 
-         Orchestration: Airflow / Databricks Workflows
-         IaC: Terraform  |  CI/CD: GitHub Actions
+        Orchestration: Databricks Workflows (3-task DAG)
+        IaC: Terraform (S3) | Dev: VS Code + Windows
 ```
 
 ---
@@ -101,73 +86,58 @@ Upload these files to your S3 bucket under the path: `s3://<your-bucket>/raw/ret
 ## 🧰 Tech Stack
 
 | Layer | Tool |
-| --- | --- |
+|---|---|
+| Infrastructure as Code | Terraform (AMD64, v1.3+) |
 | Cloud Storage | Amazon S3 |
-| Ingestion | Databricks Auto Loader |
+| Ingestion | Databricks Auto Loader (`cloudFiles`) |
 | Lakehouse Format | Delta Lake |
-| Big Data Processing | Databricks (Apache Spark) |
-| Transformation | dbt (Data Build Tool) |
-| Warehousing / SQL | Databricks SQL |
-| Governance | Unity Catalog |
-| Orchestration | Apache Airflow (or Databricks Workflows) |
-| Infrastructure as Code | Terraform |
-| CI/CD | GitHub Actions |
-| Visualization | Power BI |
+| Processing | Databricks Free Edition (PySpark) |
+| Transformation & Testing | dbt-databricks 1.12.0, dbt_utils |
+| Data Governance | Unity Catalog (lineage, access control, table tagging) |
+| Orchestration | Databricks Workflows (GitHub integration) |
+| Visualization | Power BI Desktop |
+| Version Control | GitHub |
+| Project Management | Jira (KAN board) |
 
 ---
 
 ## 📁 Repository Structure
 
 ```
-retailpulse/
+retailpulse-end-to-end-pipeline/
 │
-├── terraform/                    # Infrastructure provisioning
-│   ├── versions.tf               # Terraform and provider version constraints
-│   ├── providers.tf              # AWS provider configuration
-│   ├── variables.tf              # Input variable declarations
-│   ├── terraform.tfvars          # Variable values (excluded from version control)
-│   └── main.tf                   # S3 bucket and resource definitions
+├── terraform/                        # S3 bucket provisioning
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── providers.tf
+│   └── versions.tf
 │
-├── notebooks/                    # Databricks notebooks
-│   ├── explorations/             
-│   │   ├── retailpulse_01_delta_lake_exploration     
-│   └── pipeline/                   
-│       ├── retailpulse_01_bronze_ingestion       # Auto Loader → Bronze Delta tables
-│       ├── retailpulse_02_silver_cleaning.py     # Bronze → Silver transformations (Spark)
-│       └── retailpulse_03_gold_aggregation.py    # Silver → Gold aggregations (Spark)
+├── scripts/
+│   └── generate_data.py              # Generates 500K orders, 50K customers, 5K products
 │
-├── dbt_retailpulse/              # dbt project for Gold layer modeling
+├── notebooks/
+│   ├── pipeline/
+│   │   └── retailpulse_01_bronze_ingestion   # Auto Loader → Bronze Delta tables
+│   └── explorations/                         # Silver/Gold Spark notebooks (reference)
+│
+├── dbt_retailpulse/                  # dbt project (primary transformation layer)
 │   ├── models/
-│   │   ├── staging/              # Lightweight Silver layer refs
-│   │   ├── intermediate/         # Business logic joins
-│   │   └── marts/                # Final Gold tables for reporting
-│   ├── tests/                    # dbt data quality tests
+│   │   ├── staging/                  # Silver refs via source() macro
+│   │   └── marts/                    # Gold aggregation models via ref()
+│   ├── tests/                        # 21 dbt tests (unique, not_null, accepted_range)
 │   ├── dbt_project.yml
 │   └── profiles.yml
 │
-├── airflow/                      # Airflow DAGs for orchestration
-│   └── dags/
-│       └── retailpulse_dag.py    # Full pipeline DAG
-│
 ├── data/
-│   └── sample/                   # Sample CSV files for local testing
-│       ├── orders.csv
-│       ├── customers.csv
-│       └── products.csv
+│   └── sample/                       # Sample CSVs for local testing
 │
-├── scripts/
-│   └── generate_data.py          # Script to generate synthetic dataset
+├── dashboards/
+│   ├── retailpulse_dashboard.pbix    # Power BI dashboard file
+│   └── retailpulse_dashboard_screenshot.png
 │
-├── .github/
-│   └── workflows/
-│       ├── ci.yml                # Run dbt tests + linting on pull requests
-│       └── deploy.yml            # Deploy notebooks + dbt models on merge to main
-│
-├── powerbi/
-│   └── RetailPulse.pbix          # Power BI dashboard file
-│
-├── .gitignore
+├── airflow/dags/                     # Reference Airflow DAG (not used; see note below)
 ├── requirements.txt
+├── .gitignore
 └── README.md
 ```
 
@@ -177,31 +147,27 @@ retailpulse/
 
 ### Prerequisites
 
-Before you begin, make sure you have:
-
-* An **AWS account** with S3 access
-* A **Databricks account** (Free Edition works for learning; see infrastructure note below)
-* **Terraform** installed locally (`>= 1.3`) — download the **Windows AMD64** binary from [developer.hashicorp.com/terraform/install](https://developer.hashicorp.com/terraform/install)
-* **AWS CLI** installed and configured (`aws configure`) — download from [aws.amazon.com/cli](https://aws.amazon.com/cli)
-* **Python 3.9+** and **pip** installed
-* **dbt-databricks** adapter installed (`pip install dbt-databricks`)
-* **Apache Airflow** installed locally or via Docker (`pip install apache-airflow`)
-* **Power BI Desktop** installed (Windows only; use Power BI web on Mac)
-* **Git** and a **GitHub account**
+- AWS account with S3 access
+- Databricks account (Free Edition works — see note below)
+- Terraform `>= 1.3` — [download Windows AMD64](https://developer.hashicorp.com/terraform/install)
+- AWS CLI configured (`aws configure`)
+- Python 3.11 and pip
+- Power BI Desktop (Windows)
+- Git
 
 ---
 
-### Step 1 — Clone the Repository
+### Step 1 — Clone and install
 
 ```bash
-git clone https://github.com/<your-username>/retailpulse.git
-cd retailpulse
+git clone https://github.com/IHTHERTECH/retailpulse-end-to-end-pipeline.git
+cd retailpulse-end-to-end-pipeline
 pip install -r requirements.txt
 ```
 
 ---
 
-### Step 2 — Provision Infrastructure with Terraform
+### Step 2 — Provision S3 with Terraform
 
 ```bash
 cd terraform/
@@ -210,65 +176,40 @@ terraform plan -out=tfplan
 terraform apply tfplan
 ```
 
-This provisions:
+This provisions the S3 bucket `retailpulse-raw-data-landing`.
 
-* ✅ An **S3 bucket** (`retailpulse-raw-data-landing`) for the raw data landing zone
-
-> **⚠️ Infrastructure Note — Databricks & Unity Catalog**
->
-> In a **production environment**, this Terraform configuration would also provision:
-> - A **Databricks workspace** on AWS (via the `databricks/databricks` Terraform provider)
-> - A **Unity Catalog metastore** for data governance, lineage, and access control
-> - Three managed **schemas**: `bronze`, `silver`, `gold`
->
-> This requires AWS networking resources (VPC, subnets, NAT Gateway, IAM cross-account roles)
-> and incurs ongoing AWS costs even when idle.
->
-> For this project, **Databricks Free Edition** is used instead:
-> - The workspace is provisioned manually via [databricks.com](https://databricks.com)
-> - The `bronze`, `silver`, and `gold` schemas are created directly via SQL (see below)
-> - Unity Catalog is not available in Free Edition; governance features are documented only
->
-> This is a common and accepted approach for personal/learning projects. The Terraform
-> provider configuration for a full production setup would include the `databricks` provider
-> in `versions.tf` and workspace + metastore resource blocks in `main.tf`.
+> **Infrastructure note:** In a production environment, Terraform would also provision the Databricks workspace, Unity Catalog metastore, and IAM roles. For this project, Databricks Free Edition is provisioned manually and schemas are created via SQL. This is the pragmatic approach for a personal/learning project.
 
 ---
 
-### Step 2b — Create Databricks Schemas (Free Edition)
+### Step 3 — Create Unity Catalog schemas
 
-Since Unity Catalog is not available in Databricks Free Edition, create the medallion schemas manually. Open the **SQL Editor** in your Databricks workspace and run:
+In your Databricks SQL Editor:
 
 ```sql
-CREATE DATABASE IF NOT EXISTS bronze;
-CREATE DATABASE IF NOT EXISTS silver;
-CREATE DATABASE IF NOT EXISTS gold;
+CREATE SCHEMA IF NOT EXISTS workspace.retailpulse_bronze;
+CREATE SCHEMA IF NOT EXISTS workspace.retailpulse_silver;
+CREATE SCHEMA IF NOT EXISTS workspace.retailpulse_gold;
+CREATE SCHEMA IF NOT EXISTS workspace.retailpulse_staging;
 ```
-
-Verify by navigating to **Catalog** in the left sidebar — all three schemas should appear.
 
 ---
 
-### Step 3 — Upload Sample Data to S3
+### Step 4 — Generate and upload data
 
 ```bash
-# Generate synthetic data
 python scripts/generate_data.py
 
-# Upload to S3 (requires AWS CLI configured)
-aws s3 cp data/sample/ s3://<your-bucket>/raw/retail/ --recursive
+aws s3 cp data/sample/ s3://retailpulse-raw-data-landing/raw/retail/ --recursive
 ```
 
 ---
 
-### Step 4 — Run the Bronze Ingestion Notebook
+### Step 5 — Run Bronze ingestion
 
-Open **Databricks workspace** → Import `notebooks/01_bronze_ingestion.py`.
-
-This notebook uses **Auto Loader** to read new files from S3 incrementally and write them to Delta Lake Bronze tables.
+Import `notebooks/pipeline/retailpulse_01_bronze_ingestion` into your Databricks workspace and run it. This uses **Auto Loader** to incrementally read CSV files from S3 into Bronze Delta tables, with checkpoints stored in Unity Catalog Volumes.
 
 ```python
-# Example: Auto Loader pattern used in the notebook
 df = (spark.readStream
     .format("cloudFiles")
     .option("cloudFiles.format", "csv")
@@ -278,213 +219,126 @@ df = (spark.readStream
 df.writeStream
     .format("delta")
     .option("checkpointLocation", checkpoint_path)
-    .toTable("bronze.orders")
+    .toTable("workspace.retailpulse_bronze.orders")
 ```
 
 ---
 
-### Step 5 — Run Silver and Gold Notebooks
-
-Run the notebooks in order:
-
-```
-01_bronze_ingestion.py   →  Raw data lands in Delta
-02_silver_cleaning.py    →  Clean, deduplicate, cast types
-03_gold_aggregation.py   →  Aggregate for business reporting
-```
-
----
-
-### Step 6 — Run dbt Transformations
+### Step 6 — Run dbt transformations
 
 ```bash
+# Activate virtual environment
+source dbt_venv/Scripts/activate  # Windows
+
 cd dbt_retailpulse/
-
-# Test your connection
-dbt debug
-
-# Run all models
-dbt run
-
-# Run data quality tests
-dbt test
-
-# Generate documentation
-dbt docs generate
-dbt docs serve
+dbt debug        # verify connection
+dbt run          # build staging + mart models
+dbt test         # run 21 data quality tests
+dbt docs generate && dbt docs serve   # explore lineage graph
 ```
 
-> 💡 **Key learning moment:** Open `dbt docs serve` in your browser and explore the **lineage graph**. You will see how each model depends on the ones before it — this is data lineage in action.
+The dbt project targets a **Databricks SQL Warehouse** (`/sql/1.0/warehouses/d253a655584a182c`) and writes models to `workspace.retailpulse_staging` (staging) and `workspace.retailpulse_gold` (marts).
 
 ---
 
-### Step 7 — Set Up Pipeline Orchestration
+### Step 7 — Orchestrate with Databricks Workflows
 
-This project uses **Databricks Workflows** for orchestration, which is the
-native and recommended approach when running pipelines on Databricks.
-
-The workflow `retailpulse_pipeline` is configured directly in the Databricks
-Workflows UI with three tasks running in sequence:
+The `retailpulse_pipeline` workflow in Databricks runs the full pipeline:
 
 | Task | Type | What it does |
-| --- | --- | --- |
-| `ingest_bronze` | Notebook | Runs Auto Loader to read S3 CSV files → Bronze Delta tables |
-| `run_dbt_models` | dbt (GitHub) | Runs `dbt deps` + `dbt run` → builds Staging and Gold mart models |
-| `run_dbt_tests` | dbt (GitHub) | Runs `dbt test` → validates all 21 data quality tests |
+|---|---|---|
+| `ingest_bronze` | Notebook | Auto Loader → Bronze Delta tables |
+| `run_dbt_models` | dbt (GitHub) | `dbt deps` + `dbt run` → Staging + Gold |
+| `run_dbt_tests` | dbt (GitHub) | `dbt test` → 21 data quality checks |
 
-The `run_dbt_models` and `run_dbt_tests` tasks pull the dbt project directly
-from the GitHub repository (`dbt_retailpulse/` folder, `main` branch), so the
-workflow always runs the latest committed code.
+Tasks 2 and 3 pull directly from the `main` branch of this repo, so the workflow always runs the latest committed code.
 
-**To re-create the workflow in a new workspace:**
-1. Go to Databricks → **Jobs & Pipelines** → **Create job**
-2. Name it `retailpulse_pipeline`
-3. Add Task 1: Notebook → `retailpulse_01_bronze_ingestion`
-4. Add Task 2: dbt → Source: Git provider → `dbt_retailpulse` → commands: `dbt deps`, `dbt run`
-5. Add Task 3: dbt → Source: Git provider → `dbt_retailpulse` → commands: `dbt deps`, `dbt test`
-6. Set dependencies: Task 2 depends on Task 1, Task 3 depends on Task 2
-
-> **Airflow equivalent:** For non-Databricks environments (AWS MWAA, Google
-> Cloud Composer, self-hosted), an equivalent Airflow DAG is provided at
-> `airflow/dags/retailpulse_dag.py`. Note that Airflow does not run natively
-> on Windows — use WSL2 or Docker in that case.
+> **Why not Airflow?** Airflow requires the `fcntl` module, which is unavailable on Windows. Databricks Workflows is the native, zero-infra alternative. A reference Airflow DAG is available in `airflow/dags/` for non-Windows environments.
 
 ---
 
-### Step 8 — Explore Unity Catalog
+### Step 8 — Unity Catalog governance
 
-> **Note:** Unity Catalog is not available in Databricks Free Edition. In a paid workspace,
-> navigate to **Catalog** in the left sidebar to explore data lineage, access control, and tagging.
-
-In a full workspace, you would explore:
-
-* **Data lineage**: See how `gold.daily_sales` traces back to `bronze.orders`
-* **Access control**: Grant and revoke table-level permissions
-* **Tags**: Tag tables with `pii`, `financial`, or `public` labels
+Navigate to **Catalog** in your Databricks workspace to explore:
+- **Lineage**: trace `gold.daily_sales` back to `bronze.orders`
+- **Access control**: table-level GRANT/REVOKE
+- **Tags**: tables tagged `pii` (customers), `financial` (orders), `public` (products)
 
 ---
 
-### Step 9 — Connect Power BI
+### Step 9 — Power BI dashboard
 
-1. Open **Power BI Desktop**
-2. Click **Get Data** → **Databricks**
-3. Enter your **Databricks SQL warehouse** HTTP path and server hostname (found in Databricks SQL → SQL Warehouses → Connection Details)
-4. Connect to the `gold` schema tables
-5. Open `powerbi/RetailPulse.pbix` or build your own dashboard with these suggested visuals:
-   * 📊 Daily Revenue Trend (line chart)
-   * 🏆 Top 10 Customers by Spend (bar chart)
-   * 🗺️ Sales by Country (map)
-   * 📦 Revenue by Product Category (donut chart)
+> **Note for Databricks Free Edition users:** The native Power BI → Databricks connector does not support Free Edition. Export Gold tables as CSV from a Databricks notebook and load them via **Get Data → Text/CSV** in Power BI Desktop.
 
----
+```python
+# Export Gold tables from Databricks notebook
+tables = ["daily_sales", "top_customers", "revenue_by_category", "orders_by_country"]
+for table in tables:
+    df = spark.table(f"workspace.retailpulse_gold.{table}")
+    df.toPandas().to_csv(f"/Volumes/workspace/retailpulse_bronze/checkpoints/{table}.csv", index=False)
+```
 
-### Step 10 — Set Up CI/CD with GitHub Actions
-
-Push your code to GitHub. The workflows in `.github/workflows/` will automatically:
-
-* **On Pull Request** (`ci.yml`): Run `dbt test` to validate your models don't break
-* **On merge to `main`** (`deploy.yml`): Deploy updated notebooks and dbt models to Databricks
-
-> 💡 You will need to add these GitHub Secrets in your repo settings:
-> `DATABRICKS_HOST`, `DATABRICKS_TOKEN`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+Then open `dashboards/retailpulse_dashboard.pbix` or build fresh from the 4 CSV files.
 
 ---
 
-## 📊 Gold Layer — What You're Building Toward
+## 🧪 dbt Tests (21 total)
 
-| Table | Description | Used In Power BI |
-| --- | --- | --- |
-| `gold.daily_sales` | Revenue aggregated by day | Daily Revenue Trend chart |
-| `gold.top_customers` | Lifetime value per customer | Top Customers bar chart |
-| `gold.revenue_by_category` | Revenue broken down by product category | Category donut chart |
-| `gold.orders_by_country` | Order count and revenue by customer country | Sales map |
-
----
-
-## 🧪 Data Quality Tests (dbt)
-
-The following tests are pre-configured in the dbt project:
+Tests are defined across staging and mart models in `schema.yml` files. Examples:
 
 ```yaml
-# Example from schema.yml
-models:
-  - name: silver_orders
-    columns:
-      - name: order_id
-        tests:
-          - unique
-          - not_null
-      - name: amount
-        tests:
-          - not_null
-          - dbt_utils.accepted_range:
+- name: stg_orders
+  columns:
+    - name: order_id
+      tests:
+        - unique
+        - not_null
+    - name: amount
+      tests:
+        - not_null
+        - dbt_utils.accepted_range:
+            arguments:
               min_value: 0
 ```
 
-Run `dbt test` after every model change. Failing tests will also block deployment via GitHub Actions.
+Run `dbt test` to validate all 21 tests. The Databricks Workflow also runs tests as a dedicated task after every model run.
 
 ---
 
-## 🗺️ Learning Roadmap
+## 📊 Gold Layer — Data Models
 
-Follow this order to get the most out of this project:
-
-```
-Week 1 — Foundation
-  ✅ Set up Terraform, S3, Databricks workspace
-  ✅ Upload sample data, run Bronze ingestion with Auto Loader
-  ✅ Understand Delta Lake: ACID, time travel (try RESTORE and VERSION AS OF)
-
-Week 2 — Transformations
-  ✅ Write Silver cleaning logic in Spark (handle nulls, dedup, cast types)
-  ✅ Write Gold aggregations in Spark
-  ✅ Set up dbt project, convert Gold logic to dbt models
-  ✅ Write dbt tests
-
-Week 3 — Governance & Orchestration
-  ✅ Explore Unity Catalog lineage, tags, and access control
-  ✅ Build Airflow DAG to run the full pipeline end-to-end
-  ✅ Connect Power BI to Gold tables
-
-Week 4 — DevOps
-  ✅ Set up GitHub Actions CI (dbt test on PRs)
-  ✅ Set up GitHub Actions CD (deploy on merge)
-  ✅ Write your project retrospective in the repo Wiki
-```
+| Model | Description | Power BI Visual |
+|---|---|---|
+| `gold.daily_sales` | Revenue aggregated by order date | Daily Revenue Trend (line) |
+| `gold.top_customers` | Lifetime value per customer | Top 10 Customers (bar) |
+| `gold.revenue_by_category` | Revenue by product category | Category breakdown (donut) |
+| `gold.orders_by_country` | Order count by customer country | Orders by Country (map) |
 
 ---
 
-## 💡 Stretch Goals (After You Finish)
+## 💡 Stretch Goals
 
-Once you've completed the core pipeline, try these to deepen your skills:
-
-* **Add a streaming layer**: Use Databricks Structured Streaming to simulate real-time order ingestion
-* **Add data contracts**: Use dbt contracts to enforce column types and constraints at the model level
-* **Add Great Expectations**: Integrate GE for richer data quality profiling beyond dbt tests
-* **Automate data generation**: Schedule `generate_data.py` to drop new files every hour to simulate continuous ingestion
-* **Cost monitoring**: Use Databricks' cost management UI to understand what each notebook run costs
-
----
-
-## 🤝 Contributing
-
-This is a personal learning project, but PRs are welcome! If you find a bug, have a suggestion, or want to add a new Gold model, feel free to open an issue or submit a pull request.
+- **Streaming layer** — Structured Streaming for real-time order ingestion
+- **dbt contracts** — enforce column types at the model level
+- **Great Expectations** — richer data profiling beyond dbt tests
+- **GitHub Actions CI** — run `dbt test` on pull requests automatically
+- **Cost monitoring** — track Databricks compute cost per pipeline run
 
 ---
 
 ## 📄 License
 
-GPL-3.0 License — free to use, modify, and share for learning purposes.
+GPL-3.0 — free to use, modify, and share for learning purposes.
 
 ---
 
 ## 🙏 Acknowledgements
 
-* [Databricks Documentation](https://docs.databricks.com)
-* [dbt Documentation](https://docs.getdbt.com)
-* [The Data Engineering Cookbook](https://github.com/andkret/Cookbook) by Andreas Kretz
-* [Delta Lake Documentation](https://docs.delta.io)
+- [Databricks Documentation](https://docs.databricks.com)
+- [dbt Documentation](https://docs.getdbt.com)
+- [Delta Lake Documentation](https://docs.delta.io)
+- [The Data Engineering Cookbook](https://github.com/andkret/Cookbook) by Andreas Kretz
 
 ---
 
-*Built with 💙 as a learning project for aspiring data engineers.*
+*Built as a hands-on portfolio project for data engineering. Each component maps to a Jira ticket (KAN-6 through KAN-16) in the [RetailPulse Kanban board](https://ihthertech.atlassian.net/jira/software/projects/KAN/list).*

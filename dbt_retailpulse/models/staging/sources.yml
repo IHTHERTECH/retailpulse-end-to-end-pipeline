@@ -1,9 +1,9 @@
 version: 2
 
 sources:
-  - name: retailpulse_bronze
+  - name: retailpulse_silver
     catalog: workspace
-    schema: retailpulse_bronze
+    schema: retailpulse_silver
     tables:
       - name: orders
       - name: customers
