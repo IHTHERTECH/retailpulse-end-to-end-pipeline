@@ -14,7 +14,7 @@ models:
         tests:
           - not_null
           - unique
-      - name: lifetime_value
+      - name: total_spent
         tests:
           - not_null
 

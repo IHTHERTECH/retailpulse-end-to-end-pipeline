@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: int_orders
+  - name: stg_orders
     columns:
       - name: order_id
         tests:
@@ -14,6 +14,7 @@ models:
               arguments:
                 min_value: 0.0
                 inclusive: true
+
       - name: customer_id
         tests:
           - not_null
@@ -21,14 +22,14 @@ models:
         tests:
           - not_null
 
-  - name: int_customers
+  - name: stg_customers
     columns:
       - name: customer_id
         tests:
           - not_null
           - unique
 
-  - name: int_products
+  - name: stg_products
     columns:
       - name: product_id
         tests:
@@ -41,3 +42,5 @@ models:
               arguments:
                 min_value: 0.0
                 inclusive: true
+
+
