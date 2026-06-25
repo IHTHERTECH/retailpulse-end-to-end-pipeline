@@ -55,7 +55,12 @@ jobs:
         working-directory: dbt_retailpulse
         run: dbt deps
 
-      # ── 6. Run dbt tests ──────────────────────────────────────────────────
+      # ── 6. Build dbt models ───────────────────────────────────────────────
+      # - name: dbt build
+      #   working-directory: dbt_retailpulse
+      #   run: dbt build --target ci
+
+      # ── 7. Run dbt tests ──────────────────────────────────────────────────
       - name: dbt test
         working-directory: dbt_retailpulse
         run: dbt test --target ci

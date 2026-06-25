@@ -7,6 +7,7 @@ models:
         tests:
           - not_null
           - unique
+        description: "The date of the order"
 
   - name: top_customers
     columns:
@@ -14,9 +15,11 @@ models:
         tests:
           - not_null
           - unique
+        description: "The unique identifier for each customer"
       - name: total_spent
         tests:
           - not_null
+        description: "The total amount spent by the customer"
 
   - name: revenue_by_category
     columns:
@@ -24,10 +27,12 @@ models:
         tests:
           - not_null
           - unique
-
+        description: "The category of the product"
+      
   - name: orders_by_country
     columns:
       - name: country
         tests:
           - not_null
           - unique
+        description: "The country of the order"

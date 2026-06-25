@@ -7,6 +7,8 @@ models:
         tests:
           - not_null
           - unique
+        description: "The unique identifier for each order"
+
       - name: amount
         tests:
           - not_null
@@ -14,20 +16,24 @@ models:
               arguments:
                 min_value: 0.0
                 inclusive: true
+        description: "The amount of the order"
 
       - name: customer_id
         tests:
           - not_null
+        description: "The unique identifier for each customer"
       - name: product_id
         tests:
           - not_null
-
+        description: "The unique identifier for each product"
+      - name: order_date
   - name: stg_customers
     columns:
       - name: customer_id
         tests:
           - not_null
           - unique
+        description: "The date of the order"
 
   - name: stg_products
     columns:
@@ -35,6 +41,8 @@ models:
         tests:
           - not_null
           - unique
+        description: "The unique identifier for each product"
+
       - name: price
         tests:
           - not_null
@@ -42,5 +50,6 @@ models:
               arguments:
                 min_value: 0.0
                 inclusive: true
+        description: "The price of the product"
 
 
